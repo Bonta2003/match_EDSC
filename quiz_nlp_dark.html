@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz NLP — Fondamentaux</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:#07090f;
+  color:#e2e8f0;
+  min-height:100vh;
+  padding:2rem 1rem;
+}
+.wrap{max-width:680px;margin:0 auto}
+.hdr{margin-bottom:1.4rem}
+.hdr h1{font-size:22px;font-weight:500;color:#e2e8f0}
+.hdr p{font-size:13px;color:#7a8aa0;margin-top:4px}
+.pb-bg{background:#0f1520;border-radius:4px;height:6px;margin:.9rem 0 .4rem;border:1px solid #1a2540}
+.pb-fill{height:6px;border-radius:4px;background:linear-gradient(90deg,#8b5cf6,#06b6d4);transition:width .4s}
+.prog{font-size:12px;color:#5a6a80;margin-bottom:1rem}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:1.3rem}
+.sc{background:#0d1117;border-radius:10px;padding:.7rem .9rem;border:1px solid #1a2035}
+.sc-l{font-size:11px;color:#5a6a80;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+.sc-v{font-size:20px;font-weight:500;color:#e2e8f0}
+.sc-v.ok{color:#34d399}.sc-v.ko{color:#f87171}
+.qcard{background:#0d1117;border:1px solid #1a2035;border-radius:14px;padding:1.3rem;margin-bottom:.9rem}
+.qmeta{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
+.qnum{font-size:12px;color:#5a6a80}
+.qbadge{font-size:11px;padding:3px 11px;border-radius:20px;font-weight:500;letter-spacing:.02em}
+.b-tok{background:#1e1040;color:#a78bfa}
+.b-pre{background:#0f2030;color:#38bdf8}
+.b-rep{background:#101e10;color:#4ade80}
+.b-mod{background:#1e1830;color:#c084fc}
+.b-seq{background:#201010;color:#fb923c}
+.b-att{background:#102020;color:#2dd4bf}
+.b-met{background:#201820;color:#e879f9}
+.b-gen{background:#101818;color:#67e8f9}
+.qtext{font-size:15px;color:#ccd6e8;line-height:1.6;margin-bottom:.9rem}
+.qcode{
+  font-family:'SFMono-Regular',Consolas,Menlo,monospace;
+  font-size:12px;background:#060a0f;padding:.65rem .9rem;
+  border-radius:8px;margin-bottom:.9rem;white-space:pre;
+  border:1px solid #182030;color:#7dd3fc;overflow-x:auto;
+  line-height:1.6;
+}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.obtn{
+  text-align:left;padding:10px 13px;border-radius:10px;
+  border:1px solid #1a2035;background:#0a0e18;
+  color:#b8c8de;font-size:13px;cursor:pointer;
+  font-family:inherit;line-height:1.45;
+  transition:background .12s,border-color .15s;
+  min-height:54px;width:100%;
+}
+.obtn:hover:not(:disabled){background:#111a2a;border-color:#7c3aed;color:#e2e8f0}
+.obtn.s-ok{background:#0a2018;border-color:#34d399;color:#6ee7b7;font-weight:500}
+.obtn.s-ko{background:#200a0a;border-color:#f87171;color:#fca5a5}
+.obtn.rev-ok{background:#0a2018;border-color:#34d399;color:#6ee7b7}
+.obtn:disabled{cursor:default}
+.lbl{font-size:10px;font-weight:600;opacity:.4;display:block;margin-bottom:3px;letter-spacing:.06em;color:#8899b0}
+.fb{margin-top:11px;font-size:13px;padding:9px 13px;border-radius:9px;line-height:1.55}
+.fb.ok{background:#071a10;color:#6ee7b7;border:1px solid #134d30}
+.fb.ko{background:#1a0707;color:#fca5a5;border:1px solid #4d1313}
+.nav{display:flex;gap:9px;align-items:center;margin-top:1rem;flex-wrap:wrap}
+.nbtn{
+  padding:8px 18px;border-radius:9px;border:1px solid #1a2035;
+  background:#0d1117;color:#b8c8de;font-size:13px;
+  cursor:pointer;font-family:inherit;transition:background .12s,border-color .12s;
+}
+.nbtn:hover{background:#131c2e;border-color:#4c3a8a}
+.nbtn.pri{background:#7c3aed;color:#fff;border-color:#7c3aed}
+.nbtn.pri:hover{background:#6d28d9}
+.nbtn:disabled{opacity:.3;cursor:default}
+.jinp{width:64px;border:1px solid #1a2035;border-radius:9px;padding:7px 9px;font-size:13px;background:#0a0e18;color:#b8c8de;text-align:center;font-family:inherit}
+.res{text-align:center;padding:2.5rem 1.5rem;background:#0d1117;border-radius:14px;border:1px solid #1a2035}
+.res h2{font-size:20px;font-weight:500;margin-bottom:.4rem;color:#e2e8f0}
+.sbig{font-size:52px;font-weight:500;margin:.8rem 0;color:#a78bfa}
+.tagrow{display:flex;flex-wrap:wrap;gap:7px;margin-top:1.3rem;justify-content:center}
+.tag{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #1a2035;background:#0a0e18;color:#7a8aa0}
+.footer{text-align:center;margin-top:2rem;font-size:12px;color:#2a3545}
+@media(max-width:480px){.stats{grid-template-columns:repeat(2,1fr)}.opts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1>Quiz NLP — Fondamentaux</h1>
+    <p>28 questions · tokenisation · embeddings · modèles · attention · évaluation</p>
+  </div>
+  <div class="pb-bg"><div class="pb-fill" id="pb" style="width:0%"></div></div>
+  <div class="prog" id="prog">Question 1 / 28</div>
+  <div class="stats">
+    <div class="sc"><div class="sc-l">Répondues</div><div class="sc-v" id="sa">0</div></div>
+    <div class="sc"><div class="sc-l">Correctes</div><div class="sc-v ok" id="sc2">0</div></div>
+    <div class="sc"><div class="sc-l">Erreurs</div><div class="sc-v ko" id="sw">0</div></div>
+    <div class="sc"><div class="sc-l">Score</div><div class="sc-v" id="ss">—</div></div>
+  </div>
+  <div id="qa"></div>
+  <div id="ra"></div>
+  <div class="footer">Quiz NLP Fondamentaux · Thème sombre · Partagez ce fichier HTML !</div>
+</div>
+
+<script>
+const raw=[
+
+  // ── TOKENISATION ──────────────────────────────────────────────────────────
+  {t:"Tokenisation",b:"b-tok",
+   q:"Qu'est-ce que la tokenisation en NLP ?",
+   code:"",
+   opts:["Convertir du texte en vecteurs numériques",
+         "Découper un texte en unités élémentaires (tokens)",
+         "Supprimer les mots vides (stopwords)",
+         "Mesurer la similarité entre deux phrases"],
+   ans:"Découper un texte en unités élémentaires (tokens)",
+   exp:"La tokenisation est la première étape du pipeline NLP. Elle découpe le texte brut en tokens : mots, sous-mots, caractères ou phrases selon le niveau choisi. Ex : 'Bonjour monde' → ['Bonjour', 'monde']."},
+
+  {t:"Tokenisation",b:"b-tok",
+   q:"Pourquoi les modèles modernes (BERT, GPT) utilisent-ils la tokenisation par sous-mots (subword) plutôt que par mots ?",
+   code:"",
+   opts:["C'est plus rapide à calculer",
+         "Pour gérer les mots rares ou inconnus sans vocabulaire infini",
+         "Pour réduire la taille du modèle",
+         "Les mots entiers ne peuvent pas être encodés"],
+   ans:"Pour gérer les mots rares ou inconnus sans vocabulaire infini",
+   exp:"Un vocabulaire de mots entiers explose face aux mots rares, noms propres, fautes. La tokenisation subword (BPE, WordPiece) décompose 'indéchiffrable' en sous-unités connues → vocabulaire fini mais couverture quasi-totale."},
+
+  {t:"Tokenisation",b:"b-tok",
+   q:"Que signifie le token spécial [CLS] dans BERT ?",
+   code:"# Exemple BERT :\n# [CLS] Je mange une pomme [SEP]\n# [CLS] Elle lit un livre  [SEP]",
+   opts:["Fin de séquence",
+         "Token de classification : sa représentation encode la phrase entière",
+         "Token de padding pour égaliser les longueurs",
+         "Séparateur entre deux phrases"],
+   ans:"Token de classification : sa représentation encode la phrase entière",
+   exp:"[CLS] est placé en début de séquence. Après le passage dans BERT, le vecteur de [CLS] capture le sens global de la phrase et sert de représentation pour les tâches de classification. [SEP] sépare deux segments."},
+
+  {t:"Tokenisation",b:"b-tok",
+   q:"Qu'est-ce que le padding dans le traitement de séquences NLP ?",
+   code:"# ['chat', 'mange']       → [45, 12,  0,  0]\n# ['le', 'gros', 'chat', 'dort'] → [3, 78, 45, 99]",
+   opts:["Supprimer les tokens rares",
+         "Ajouter des tokens neutres (0) pour que toutes les séquences aient la même longueur",
+         "Encoder les espaces entre les mots",
+         "Augmenter le vocabulaire du modèle"],
+   ans:"Ajouter des tokens neutres (0) pour que toutes les séquences aient la même longueur",
+   exp:"Les réseaux traitent des batchs de séquences en parallèle. Toutes doivent avoir la même longueur. On ajoute des tokens 0 (pad) à la fin des séquences courtes. Le masque d'attention ignore ces positions de padding."},
+
+  // ── PREPROCESSING ─────────────────────────────────────────────────────────
+  {t:"Préprocessing",b:"b-pre",
+   q:"Que fait la lemmatisation sur le mot 'mangeais' ?",
+   code:"",
+   opts:["Supprime le mot car il est trop court",
+         "Le réduit à sa forme canonique : 'manger'",
+         "Le remplace par son synonyme",
+         "Convertit en minuscules : 'mangeais'"],
+   ans:"Le réduit à sa forme canonique : 'manger'",
+   exp:"La lemmatisation réduit un mot à son lemme (forme de base du dictionnaire) en tenant compte du contexte grammatical. 'mangeais', 'mangeons', 'mangé' → 'manger'. Différente du stemming qui tronque bêtement le suffixe."},
+
+  {t:"Préprocessing",b:"b-pre",
+   q:"Qu'est-ce qu'un stopword (mot vide) ?",
+   code:"# Texte : 'le chat est sur le tapis'\n# Après suppression stopwords :\n# 'chat tapis'",
+   opts:["Un mot avec une faute d'orthographe",
+         "Un mot très fréquent sans valeur sémantique (le, est, de, un...)",
+         "Un mot hors vocabulaire du modèle",
+         "Un mot dont le sens est ambigu"],
+   ans:"Un mot très fréquent sans valeur sémantique (le, est, de, un...)",
+   exp:"Les stopwords (le, la, est, de, un, que...) sont omniprésents dans tous les textes mais n'apportent pas d'information discriminante. On les supprime souvent en classification de textes pour réduire le bruit et la dimensionnalité."},
+
+  {t:"Préprocessing",b:"b-pre",
+   q:"Quelle est la différence entre stemming et lemmatisation ?",
+   code:"# Stemming :    'manger' → 'mang'\n# Lemmatisation : 'mangeait' → 'manger'",
+   opts:["Le stemming utilise un dictionnaire, la lemmatisation non",
+         "Le stemming tronque le mot par règles simples, la lemmatisation retourne la forme canonique correcte",
+         "La lemmatisation est plus rapide",
+         "Le stemming tient compte du contexte grammatical"],
+   ans:"Le stemming tronque le mot par règles simples, la lemmatisation retourne la forme canonique correcte",
+   exp:"Stemming = algorithme de troncature rapide mais brutal ('fishing' → 'fish', 'studies' → 'studi'). Lemmatisation = consultation d'un dictionnaire morphologique, plus lente mais précise ('better' → 'good', 'was' → 'be')."},
+
+  // ── REPRÉSENTATIONS ───────────────────────────────────────────────────────
+  {t:"Représentations",b:"b-rep",
+   q:"Que représente un vecteur TF-IDF pour un mot dans un document ?",
+   code:"TF-IDF(t,d) = TF(t,d) × IDF(t)",
+   opts:["La fréquence brute du mot dans le document",
+         "L'importance du mot dans ce document, pondérée par sa rareté dans le corpus",
+         "La probabilité que le mot soit un stopword",
+         "Le vecteur sémantique du mot appris par un réseau"],
+   ans:"L'importance du mot dans ce document, pondérée par sa rareté dans le corpus",
+   exp:"TF = fréquence du terme dans le doc. IDF = log(N/df) où N=nb docs, df=nb docs contenant le terme. Un mot fréquent dans un doc mais rare dans le corpus → TF-IDF élevé. Stopwords : fréquents partout → IDF ≈ 0."},
+
+  {t:"Représentations",b:"b-rep",
+   q:"Qu'est-ce qu'un word embedding (ex: Word2Vec) ?",
+   code:"# king - man + woman ≈ queen\nvec('king') - vec('man') + vec('woman') ≈ vec('queen')",
+   opts:["Un dictionnaire mot → définition",
+         "Un vecteur dense de réels qui encode le sens d'un mot dans un espace continu",
+         "Un encodage one-hot du vocabulaire",
+         "La fréquence d'un mot dans un corpus"],
+   ans:"Un vecteur dense de réels qui encode le sens d'un mot dans un espace continu",
+   exp:"Un embedding projette chaque mot dans un espace vectoriel dense (ex: 300 dimensions) où les mots sémantiquement proches sont géométriquement proches. Propriété remarquable : les relations sémantiques se traduisent en opérations vectorielles."},
+
+  {t:"Représentations",b:"b-rep",
+   q:"Quelle est la limite fondamentale des word embeddings classiques (Word2Vec, GloVe) ?",
+   code:"# 'banque' dans :\n# 'Je vais à la banque retirer de l argent'\n# 'La banque du fleuve est boueuse'",
+   opts:["Ils sont trop lents à calculer",
+         "Ils assignent un seul vecteur fixe par mot, incapable de gérer la polysémie",
+         "Ils ne fonctionnent qu'en anglais",
+         "Leur dimension est trop petite"],
+   ans:"Ils assignent un seul vecteur fixe par mot, incapable de gérer la polysémie",
+   exp:"Word2Vec donne un unique vecteur à 'banque' quelle que soit le contexte (financier ou géographique). Les modèles contextuels comme BERT génèrent des représentations différentes selon le contexte de la phrase."},
+
+  {t:"Représentations",b:"b-rep",
+   q:"Que représente le modèle Bag of Words (BoW) ?",
+   code:"# 'chat mange souris' → {chat:1, mange:1, souris:1}\n# 'souris mange chat' → {chat:1, mange:1, souris:1}",
+   opts:["Un modèle de langage génératif",
+         "Un vecteur comptant les occurrences de chaque mot, sans tenir compte de l'ordre",
+         "Un réseau récurrent pour les séquences",
+         "Un embedding contextuel des phrases"],
+   ans:"Un vecteur comptant les occurrences de chaque mot, sans tenir compte de l'ordre",
+   exp:"BoW représente un document comme un vecteur de fréquences sur le vocabulaire. 'chat mange souris' et 'souris mange chat' ont la même représentation BoW. Simple et efficace pour la classification, mais perd tout ordre et contexte."},
+
+  // ── MODÈLES ───────────────────────────────────────────────────────────────
+  {t:"Modèles",b:"b-mod",
+   q:"Dans un RNN (Réseau Récurrent), qu'est-ce que le 'hidden state' ?",
+   code:"# À chaque étape t :\n# hₜ = f(hₜ₋₁, xₜ)\n# hₜ : hidden state\n# xₜ : token courant",
+   opts:["Les poids du réseau non entraînés",
+         "Un vecteur résumant l'information des tokens précédents transmis d'étape en étape",
+         "La couche de sortie finale",
+         "L'embedding du token courant"],
+   ans:"Un vecteur résumant l'information des tokens précédents transmis d'étape en étape",
+   exp:"Le hidden state hₜ est la 'mémoire' du RNN. Il encode l'information accumulée jusqu'au token t et est mis à jour à chaque étape. C'est ce vecteur qui permet au RNN de traiter des séquences de longueur variable."},
+
+  {t:"Modèles",b:"b-mod",
+   q:"Quel est le problème principal des RNN simples sur des longues séquences ?",
+   code:"",
+   opts:["Ils sont trop rapides et sur-apprennent",
+         "La disparition du gradient : les infos lointaines s'effacent lors de la rétropropagation",
+         "Ils ne peuvent traiter que des séquences de longueur fixe",
+         "Ils nécessitent trop de mémoire GPU"],
+   ans:"La disparition du gradient : les infos lointaines s'effacent lors de la rétropropagation",
+   exp:"En rétropropagation sur de longues séquences, les gradients sont multipliés à chaque étape. S'ils sont < 1, ils tendent vers 0 (disparition) → le réseau oublie les tokens lointains. Les LSTM et GRU ont été conçus pour atténuer ce problème."},
+
+  {t:"Modèles",b:"b-mod",
+   q:"Quelle amélioration apporte le LSTM par rapport au RNN simple ?",
+   code:"",
+   opts:["Il traite les séquences en parallèle",
+         "Il introduit des portes (gates) pour contrôler ce qu'il faut retenir ou oublier",
+         "Il utilise l'attention multi-têtes",
+         "Il n'a pas besoin d'être entraîné"],
+   ans:"Il introduit des portes (gates) pour contrôler ce qu'il faut retenir ou oublier",
+   exp:"Le LSTM a 3 portes : forget gate (ce qu'on oublie), input gate (ce qu'on retient du nouveau token), output gate (ce qu'on sort). Cette architecture permet de conserver des dépendances à long terme inaccessibles au RNN simple."},
+
+  {t:"Modèles",b:"b-mod",
+   q:"Qu'est-ce que BERT et quel est son paradigme d'entraînement ?",
+   code:"",
+   opts:["Un modèle génératif entraîné à prédire le token suivant",
+         "Un modèle encodeur bidirectionnel pré-entraîné par masquage de tokens (MLM)",
+         "Un RNN pour la traduction automatique",
+         "Un modèle de clustering de phrases"],
+   ans:"Un modèle encodeur bidirectionnel pré-entraîné par masquage de tokens (MLM)",
+   exp:"BERT (Bidirectional Encoder Representations from Transformers) masque aléatoirement 15% des tokens et apprend à les reconstruire (Masked Language Modeling). Bidirectionnel = il voit le contexte gauche ET droit. Idéal pour la compréhension de texte."},
+
+  {t:"Modèles",b:"b-mod",
+   q:"Quelle est la différence fondamentale entre BERT et GPT ?",
+   code:"",
+   opts:["BERT est plus grand que GPT",
+         "BERT est un encodeur (compréhension), GPT est un décodeur (génération)",
+         "GPT utilise la bidirectionnalité, BERT non",
+         "BERT ne peut pas être fine-tuné"],
+   ans:"BERT est un encodeur (compréhension), GPT est un décodeur (génération)",
+   exp:"BERT = encodeur Transformer, voit tout le contexte → tâches de compréhension (classification, NER, QA). GPT = décodeur Transformer, prédit le token suivant (causal) → génération de texte. Deux architectures complémentaires issues du même Transformer."},
+
+  // ── SÉQUENCES ─────────────────────────────────────────────────────────────
+  {t:"Tâches NLP",b:"b-seq",
+   q:"Qu'est-ce que la NER (Named Entity Recognition) ?",
+   code:"# 'Apple a été fondée par Steve Jobs à Cupertino'\n# Apple     → ORG\n# Steve Jobs → PER\n# Cupertino  → LOC",
+   opts:["Analyser la polarité (positif/négatif) d'un texte",
+         "Identifier et classer les entités nommées (personnes, lieux, organisations)",
+         "Traduire automatiquement un texte",
+         "Résumer un texte en quelques phrases"],
+   ans:"Identifier et classer les entités nommées (personnes, lieux, organisations)",
+   exp:"La NER est une tâche de séquençage : chaque token reçoit un label (PER, ORG, LOC, DATE, O). Utile pour l'extraction d'information, les moteurs de recherche, les chatbots. Résolue aujourd'hui avec des modèles comme BERT fine-tuné."},
+
+  {t:"Tâches NLP",b:"b-seq",
+   q:"L'analyse de sentiment consiste à :",
+   code:"# 'Ce film est absolument magnifique !'  → positif\n# 'Quelle perte de temps...'            → négatif",
+   opts:["Détecter la langue d'un texte",
+         "Classifier le ton émotionnel d'un texte (positif, négatif, neutre)",
+         "Extraire les entités nommées d'un texte",
+         "Générer un résumé automatique"],
+   ans:"Classifier le ton émotionnel d'un texte (positif, négatif, neutre)",
+   exp:"L'analyse de sentiment est une tâche de classification. Applications : avis clients, modération, veille réputationnelle. On peut faire du fine-tuning de BERT sur un dataset labelisé (positif/négatif) pour obtenir d'excellents résultats."},
+
+  {t:"Tâches NLP",b:"b-seq",
+   q:"Qu'est-ce que la traduction automatique neuronale (NMT) ?",
+   code:"",
+   opts:["Traduire un texte mot à mot dans un dictionnaire",
+         "Un modèle encoder-decoder qui apprend à traduire bout-en-bout sans règles manuelles",
+         "Une table de correspondance entre vocabulaires",
+         "Un modèle de détection de la langue source"],
+   ans:"Un modèle encoder-decoder qui apprend à traduire bout-en-bout sans règles manuelles",
+   exp:"NMT (ex : Google Translate depuis 2016) encode la phrase source dans un vecteur, puis le décodeur génère la traduction token par token. L'attention permet au décodeur de se concentrer sur les parties pertinentes de la source à chaque étape."},
+
+  // ── ATTENTION & TRANSFORMER ───────────────────────────────────────────────
+  {t:"Attention",b:"b-att",
+   q:"Intuitivement, que fait le mécanisme d'attention dans un Transformer ?",
+   code:"# 'La banque a refusé le prêt car elle était en faillite'\n# Pour 'elle' → attention forte sur 'banque'",
+   opts:["Trier les tokens par ordre alphabétique",
+         "Permettre à chaque token de pondérer l'importance de tous les autres tokens du contexte",
+         "Compresser la séquence en un seul vecteur",
+         "Supprimer les tokens peu informatifs"],
+   ans:"Permettre à chaque token de pondérer l'importance de tous les autres tokens du contexte",
+   exp:"L'attention calcule pour chaque token un score d'importance envers tous les autres. Pour résoudre 'elle' dans la phrase, le modèle apprend à donner un fort score à 'banque'. Formule : Attention(Q,K,V) = softmax(QKᵀ/√d)V."},
+
+  {t:"Attention",b:"b-att",
+   q:"Dans l'attention, que représentent les matrices Q, K et V ?",
+   code:"Attention(Q,K,V) = softmax(QKᵀ / √dₖ) · V",
+   opts:["Questions, Clés et Valeurs : projections linéaires de l'entrée pour calculer les scores d'attention",
+         "Quantification, Kernel et Vecteur",
+         "Les poids du réseau de neurones",
+         "Les embeddings positionnels de chaque token"],
+   ans:"Questions, Clés et Valeurs : projections linéaires de l'entrée pour calculer les scores d'attention",
+   exp:"Q (Query) = ce que je cherche. K (Key) = ce que j'offre. V (Value) = ce que je transmets. QKᵀ mesure la compatibilité entre la requête et chaque clé. Softmax normalise en poids. La sortie est une somme pondérée des valeurs V."},
+
+  {t:"Attention",b:"b-att",
+   q:"Pourquoi divise-t-on par √dₖ dans la formule d'attention ?",
+   code:"softmax(QKᵀ / √dₖ)",
+   opts:["Pour accélérer les calculs matriciels",
+         "Pour éviter que les produits scalaires deviennent trop grands et saturent le softmax",
+         "Pour normaliser les embeddings à une norme de 1",
+         "Pour ajouter de la régularisation"],
+   ans:"Pour éviter que les produits scalaires deviennent trop grands et saturent le softmax",
+   exp:"Pour une grande dimension dₖ, les produits QKᵀ peuvent être très grands → softmax pousse vers des distributions très piquées → gradients quasi nuls → apprentissage lent. Diviser par √dₖ garde les scores dans une plage raisonnable."},
+
+  {t:"Attention",b:"b-att",
+   q:"Qu'est-ce que l'encodage positionnel dans le Transformer ?",
+   code:"",
+   opts:["L'ordre des têtes d'attention dans le modèle",
+         "Un vecteur ajouté à l'embedding pour injecter l'information de position dans la séquence",
+         "La position du token [CLS] dans la phrase",
+         "Le rang du token dans le vocabulaire"],
+   ans:"Un vecteur ajouté à l'embedding pour injecter l'information de position dans la séquence",
+   exp:"Contrairement aux RNN, le Transformer traite tous les tokens en parallèle et n'a pas de notion d'ordre. L'encodage positionnel (sinus/cosinus ou appris) est ajouté à l'embedding pour signaler la position de chaque token dans la séquence."},
+
+  // ── MÉTRIQUES ─────────────────────────────────────────────────────────────
+  {t:"Métriques",b:"b-met",
+   q:"Le score BLEU est utilisé pour évaluer :",
+   code:"",
+   opts:["La précision d'un modèle de classification",
+         "La qualité d'une traduction ou génération de texte en comparant n-grammes",
+         "La perplexité d'un modèle de langage",
+         "La similarité sémantique entre deux embeddings"],
+   ans:"La qualité d'une traduction ou génération de texte en comparant n-grammes",
+   exp:"BLEU (Bilingual Evaluation Understudy) compare les n-grammes du texte généré avec ceux de référence(s) humaine(s). Score ∈ [0,1]. 1 = identique à la référence. Utilisé pour la traduction, le résumé, la génération. Limité car insensible au sens."},
+
+  {t:"Métriques",b:"b-met",
+   q:"Qu'est-ce que la perplexité d'un modèle de langage ?",
+   code:"Perplexité = exp(-1/N · Σ log P(wᵢ|w₁...wᵢ₋₁))",
+   opts:["Le nombre de paramètres du modèle",
+         "Une mesure de surprise : plus elle est basse, mieux le modèle prédit le texte",
+         "Le score d'accuracy sur un dataset de test",
+         "La longueur moyenne des séquences générées"],
+   ans:"Une mesure de surprise : plus elle est basse, mieux le modèle prédit le texte",
+   exp:"La perplexité mesure à quel point le modèle est 'surpris' par un texte de test. Perplexité = 10 signifie que le modèle hésite en moyenne entre 10 tokens à chaque étape. Perplexité basse → bon modèle de langage. C'est la métrique intrinsèque de référence."},
+
+  // ── GÉNÉRAL ───────────────────────────────────────────────────────────────
+  {t:"Général",b:"b-gen",
+   q:"Qu'est-ce que le fine-tuning d'un LLM pré-entraîné ?",
+   code:"",
+   opts:["Réentraîner le modèle entièrement depuis zéro",
+         "Continuer l'entraînement sur une tâche spécifique avec un dataset annoté plus petit",
+         "Compresser le modèle pour réduire sa taille",
+         "Évaluer le modèle sur un benchmark"],
+   ans:"Continuer l'entraînement sur une tâche spécifique avec un dataset annoté plus petit",
+   exp:"Le fine-tuning part des poids pré-entraînés (connaissance générale) et les adapte à une tâche précise (classification de sentiments, NER, QA) avec quelques milliers d'exemples annotés. Bien plus efficace que d'entraîner depuis zéro."},
+
+  {t:"Général",b:"b-gen",
+   q:"Que signifie 'out-of-vocabulary' (OOV) en NLP ?",
+   code:"",
+   opts:["Un mot trop long pour être encodé",
+         "Un mot absent du vocabulaire sur lequel le modèle a été entraîné",
+         "Un stopword supprimé lors du preprocessing",
+         "Un token de padding ajouté à la séquence"],
+   ans:"Un mot absent du vocabulaire sur lequel le modèle a été entraîné",
+   exp:"Un mot OOV n'a pas d'embedding appris. Les modèles anciens le remplacent par un token [UNK]. La tokenisation subword (BPE, WordPiece) réduit drastiquement ce problème en décomposant les mots inconnus en sous-unités connues."},
+
+  {t:"Général",b:"b-gen",
+   q:"Qu'est-ce que le transfer learning en NLP ?",
+   code:"",
+   opts:["Transférer un modèle d'une langue à une autre",
+         "Réutiliser les poids d'un modèle pré-entraîné sur de larges corpus pour une nouvelle tâche",
+         "Copier l'architecture d'un modèle existant",
+         "Entraîner plusieurs modèles en parallèle"],
+   ans:"Réutiliser les poids d'un modèle pré-entraîné sur de larges corpus pour une nouvelle tâche",
+   exp:"BERT, GPT, RoBERTa sont pré-entraînés sur des milliards de mots. On transfère leurs poids (connaissance de la langue) vers une tâche spécifique via fine-tuning. C'est le paradigme dominant du NLP moderne depuis 2018 ('pretrain then fine-tune')."}
+];
+
+function shuffle(a){
+  const r=[...a];
+  for(let i=r.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [r[i],r[j]]=[r[j],r[i]];
+  }
+  return r;
+}
+
+const questions=raw.map(q=>{
+  const s=shuffle(q.opts);
+  return{...q,opts:s,ans:s.indexOf(q.ans)};
+});
+
+let cur=0,answers=new Array(questions.length).fill(null),okC=0,koC=0;
+
+function upStats(){
+  const done=answers.filter(a=>a!==null).length;
+  document.getElementById('sa').textContent=done;
+  document.getElementById('sc2').textContent=okC;
+  document.getElementById('sw').textContent=koC;
+  document.getElementById('ss').textContent=done>0?Math.round(okC/done*100)+'%':'—';
+  document.getElementById('pb').style.width=Math.round(cur/questions.length*100)+'%';
+  document.getElementById('prog').textContent='Question '+(cur+1)+' / '+questions.length;
+}
+
+function renderQ(idx){
+  if(idx>=questions.length){showResult();return;}
+  cur=idx;upStats();
+  const q=questions[idx],done=answers[idx]!==null,ua=answers[idx];
+  const labels=['A','B','C','D'];
+  const optH=q.opts.map((o,i)=>{
+    let cls='obtn';
+    if(done){if(i===q.ans)cls+=' rev-ok';if(i===ua&&ua!==q.ans)cls+=' s-ko';}
+    return'<button class="'+cls+'"'+(done?' disabled':'')+' onclick="pick('+idx+','+i+')">'
+      +'<span class="lbl">'+labels[i]+'</span>'+o+'</button>';
+  }).join('');
+  let fb='';
+  if(done){
+    const ok=ua===q.ans;
+    fb='<div class="fb '+(ok?'ok':'ko')+'">'+(ok?'✓ Correct ! ':'✗ Incorrect. ')+q.exp+'</div>';
+  }
+  const cb=q.code?'<div class="qcode">'+q.code+'</div>':'';
+  document.getElementById('qa').innerHTML=
+    '<div class="qcard">'
+    +'<div class="qmeta"><span class="qnum">Q'+(idx+1)+' / '+questions.length+'</span>'
+    +'<span class="qbadge '+q.b+'">'+q.t+'</span></div>'
+    +'<div class="qtext">'+q.q+'</div>'+cb
+    +'<div class="opts">'+optH+'</div>'+fb
+    +'</div>'
+    +'<div class="nav">'
+    +'<button class="nbtn" onclick="go('+(idx-1)+')"'+(idx===0?' disabled':'')+'>← Préc.</button>'
+    +'<button class="nbtn pri" onclick="go('+(idx+1)+')">'+(idx===questions.length-1?'Résultats →':'Suiv. →')+'</button>'
+    +'<input class="jinp" type="number" min="1" max="'+questions.length+'" id="ji" placeholder="N°">'
+    +'<button class="nbtn" onclick="var v=parseInt(document.getElementById(\'ji\').value)-1;if(v>=0&&v<'+questions.length+')go(v)">Aller</button>'
+    +'</div>';
+}
+
+function pick(qi,oi){
+  if(answers[qi]!==null)return;
+  answers[qi]=oi;
+  if(oi===questions[qi].ans)okC++;else koC++;
+  renderQ(qi);
+}
+function go(idx){
+  if(idx<0)return;
+  if(idx>=questions.length){showResult();return;}
+  renderQ(idx);
+}
+
+function showResult(){
+  document.getElementById('pb').style.width='100%';
+  document.getElementById('prog').textContent='Quiz terminé !';
+  upStats();
+  document.getElementById('qa').innerHTML='';
+  const done=answers.filter(a=>a!==null).length;
+  const pct=done>0?Math.round(okC/done*100):0;
+  const emoji=pct>=80?'🎉':pct>=60?'👍':'📖';
+  const msg=pct>=80?'Excellent niveau NLP !':pct>=60?'Bonne base, continue !':'Révise les fondamentaux et réessaie !';
+  const cats={};
+  questions.forEach(function(q,i){
+    if(!cats[q.t])cats[q.t]={ok:0,tot:0,b:q.b};
+    cats[q.t].tot++;
+    if(answers[i]===q.ans)cats[q.t].ok++;
+  });
+  const tags=Object.entries(cats).map(function(e){
+    return'<span class="tag '+e[1].b+'">'+e[0]+' '+e[1].ok+'/'+e[1].tot+'</span>';
+  }).join('');
+  document.getElementById('ra').innerHTML=
+    '<div class="res">'
+    +'<h2>'+emoji+' '+msg+'</h2>'
+    +'<div class="sbig">'+pct+'%</div>'
+    +'<p style="color:#5a6a80;font-size:13px">'+okC+' correctes · '+koC+' erreurs · '+done+'/'+questions.length+' répondues</p>'
+    +'<div class="tagrow">'+tags+'</div>'
+    +'<div style="margin-top:1.4rem;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">'
+    +'<button class="nbtn pri" onclick="restart()">Recommencer</button>'
+    +'<button class="nbtn" onclick="reviewWrong()">Revoir les erreurs</button>'
+    +'</div></div>';
+}
+
+function restart(){
+  answers=new Array(questions.length).fill(null);
+  okC=0;koC=0;
+  document.getElementById('ra').innerHTML='';
+  renderQ(0);
+}
+function reviewWrong(){
+  var bad=answers.map(function(a,i){return a!==null&&a!==questions[i].ans?i:-1;}).filter(function(i){return i>=0;});
+  if(!bad.length){alert('Aucune erreur à revoir !');return;}
+  document.getElementById('ra').innerHTML='';
+  renderQ(bad[0]);
+}
+renderQ(0);
+</script>
+</body>
+</html>
